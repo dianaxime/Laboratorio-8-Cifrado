@@ -5,42 +5,58 @@ Camila Gonzalez 18398
 Maria Ines Vasquez 18250
 '''
 
+# Codigo Refrenciado https://cryptobook.nakov.com/digital-firmas/rsa-sign-verify-examples
+
 from Crypto.PublicKey import RSA
 from Crypto.Signature.pkcs1_15 import PKCS115_SigScheme
 from Crypto.Hash import SHA256
 import binascii
 
-# Generate 1024-bit RSA key pair (private + public key)
-keyPair = RSA.generate(bits=1024)
-print(f"Public key:  (n={hex(keyPair.n)}, e={hex(keyPair.e)})")
-print()
-print(f"Private key: (n={hex(keyPair.n)}, d={hex(keyPair.d)})")
-pubKey = keyPair.publickey()
+# Generar la llave pública y privada utilizando RSA
+llaves = RSA.generate(bits=1024)
+print(f"La llave publica es: \n n={hex(llaves.n)} \n e={hex(llaves.e)} \n")
 
-# Sign the message using the PKCS#1 v1.5 signature scheme (RSASP1)
-msg = b'Message for RSA signing'
-hash = SHA256.new(msg)
-signer = PKCS115_SigScheme(keyPair)
-signature = signer.sign(hash)
-print()
-print("Signature:", binascii.hexlify(signature))
+print(f"La llave privada es: \n n={hex(llaves.n)} \n d={hex(llaves.d)} \n")
+llavepublica = llaves.publickey()
 
-# Verify valid PKCS#1 v1.5 signature (RSAVP1)
-msg = b'Message for RSA signing'
-hash = SHA256.new(msg)
-verifier = PKCS115_SigScheme(pubKey)
+# Este es el mensaje a firmar
+mensaje = b'Hola, este es el mensaje a firmar'
+
+# Se aplica un hash al mensaje
+hash = SHA256.new(mensaje)
+
+# Se firma utilizando el estandar de RSA -> PKCS#1
+firmador = PKCS115_SigScheme(llaves)
+firma = firmador.sign(hash)
+
+print("La firma es: \n", binascii.hexlify(firma), "\n")
+
+# Verificar una firma válida
+mensaje = b'Hola, este es el mensaje a firmar'
+hash = SHA256.new(mensaje)
+verificador = PKCS115_SigScheme(llavepublica)
+
+print("Verificar firma con el mensaje correcto \n")
+
 try:
-    verifier.verify(hash, signature)
-    print("Signature is valid.")
+    # Si es correcto nos dice que la fima es valida
+    verificador.verify(hash, firma)
+    print("La firma es valida \n")
 except:
-    print("Signature is invalid.")
+    # Si no nos dice que hay un error sin dar mayor información
+    print("La llave es invalida o el texto ha sido modificado \n")
 
-# Verify invalid PKCS#1 v1.5 signature (RSAVP1)
-msg = b'A tampered message'
-hash = SHA256.new(msg)
-verifier = PKCS115_SigScheme(pubKey)
+# Verificar utilizando una firma diferente
+mensaje = b'Un mensaje totalmente distinto al real'
+hash = SHA256.new(mensaje)
+verificador = PKCS115_SigScheme(llavepublica)
+
+print("Verificar firma con un mensaje distinto \n")
+
 try:
-    verifier.verify(hash, signature)
-    print("Signature is valid.")
+    # Si es correcto nos dice que la fima es valida
+    verificador.verify(hash, firma)
+    print("La firma es valida \n")
 except:
-    print("Signature is invalid.")
+    # Si no nos dice que hay un error sin dar mayor información
+    print("La llave es invalida o el texto ha sido modificado \n")
